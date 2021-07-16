@@ -562,3 +562,55 @@ function camelcase( string $str, array $preserved_chars = array() ): string {
 
 	return lcfirst( $str );
 }
+
+add_action(
+	'graphql_post_object_mutation_update_additional_data',
+	function ( $post_id, $input, $post_type_object ) {
+		$content_types = get_registered_content_types();
+
+		if ( ! array_key_exists( $post_type_object->name, $content_types ) ) {
+			return;
+		}
+
+		$fields = $content_types[ $post_type_object->name ]['fields'];
+
+		foreach ( $fields as $key => $field ) {
+			$name = lcfirst( camelcase( $field['name'] ) );
+			if ( isset( $input[ $name ] ) ) {
+				// Sanitize field values.
+				$field_type  = $field['type'];
+				$field_value = \WPE\AtlasContentModeler\sanitize_field( $field_type, wp_unslash( $input[ $name ] ) );
+				update_post_meta( $post_id, \sanitize_text_field( $field['slug'] ), $field_value );
+			}
+		}
+	},
+	10,
+	5
+);
+
+add_action(
+	'graphql_input_fields',
+	function ( $fields, $type_name ) {
+		$content_types    = get_registered_content_types();
+		$input_type_names = [];
+		$custom_fields    = [];
+
+		foreach ( $content_types as $type ) {
+			$input_type_names[ 'Create' . ucfirst( camelcase( $type['slug'] ) ) . 'Input' ] = $type;
+		}
+
+		if ( ! array_key_exists( $type_name, $input_type_names ) ) {
+			return $fields;
+		}
+
+		foreach ( $input_type_names[ $type_name ]['fields'] as $field ) {
+			$custom_fields[ $field['slug'] ] = [ 'type' => 'String' ]; // TODO: make type accurate.
+		}
+
+		$fields = array_merge( $fields, $custom_fields );
+
+		return $fields;
+	},
+	20,
+	3
+);
