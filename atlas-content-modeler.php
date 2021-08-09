@@ -33,6 +33,14 @@ add_action( 'plugins_loaded', 'atlas_content_modeler_loader' );
 function atlas_content_modeler_loader(): void {
 	load_plugin_textdomain( 'atlas_content_modeler', false, __DIR__ . '/languages' );
 
+	$composer_autoloader = __DIR__ . '/vendor/autoload.php';
+
+	if ( file_exists( $composer_autoloader ) ) {
+		include_once $composer_autoloader;
+	}
+
+	\TenUp\ContentConnect\Plugin::instance();
+
 	$plugin_files = array(
 		'publisher/lib/field-functions.php',
 		'shared-assets/wp_scripts/shared_assets.php',

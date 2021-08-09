@@ -31,5 +31,8 @@
       "preferred-install": "dist",
       "sort-packages": true,
       "optimize-autoloader": true
+    },
+    "require": {
+        "10up/wp-content-connect": "^1.5"
     }
 }
