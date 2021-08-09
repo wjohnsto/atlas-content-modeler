@@ -51,40 +51,37 @@ add_action( 'tenup-content-connect-init', __NAMESPACE__ . '\\register_relationsh
  * @return void
  */
 function register_relationships( $registry ) {
-	$content_types = get_registered_content_types();
+	$relationships = get_option( 'atlas_content_modeler_relationships', array() );
 
-	if ( ! $content_types ) {
-		return;
+	foreach ( $relationships as $rel_id => $field ) {
+		list( $from, $from_slug, $to, $to_slug ) = explode( ':', $rel_id );
+
+		$args = array(
+			'from' => array(
+				'enable_ui' => true,
+				'sortable'  => false,
+				'labels'    => array(
+					'name' => $field['name'],
+				),
+			),
+			'to'   => array(
+				'enable_ui' => true,
+				'sortable'  => false,
+				'labels'    => array(
+					'name' => $field['reflexive_name'],
+				),
+			),
+		);
+
+		$relationship = $registry->define_post_to_post( $from, $to, $rel_id, $args );
 	}
+}
 
-	foreach ( $content_types as $slug => $args ) {
-		if ( ! $args['fields'] ) {
-			continue;
-		}
+function generate_relationship_id( $from, $from_name, $to, $to_name ) {
+	$field_ids = [ "{$from}:{$from_name}", "{$to}:{$to_name}" ];
+	sort( $field_ids );
 
-		foreach ( $args['fields'] as $field ) {
-			if ( $field['type'] === 'relationship' ) {
-				$args = array(
-					'from' => array(
-						'enable_ui' => true,
-						'sortable'  => false,
-						'labels'    => array(
-							'name' => $field['name'],
-						),
-					),
-					'to'   => array(
-						'enable_ui' => true,
-						'sortable'  => false,
-						'labels'    => array(
-							'name' => $field['name'],
-						),
-					),
-				);
-
-				$relationship = $registry->define_post_to_post( $slug, $field['reference'], $field['slug'], $args );
-			}
-		}
-	}
+	return "{$field_ids[0]}:{$field_ids[1]}";
 }
 
 /**
@@ -380,6 +377,31 @@ function get_registered_content_types(): array {
 
 	if ( $needs_update ) {
 		update_registered_content_types( $updated_models );
+	}
+
+	$relationships = get_option( 'atlas_content_modeler_relationships', array() );
+
+	foreach ( $relationships as $rel_id => $field ) {
+		$relation_parts = explode( ':', $rel_id );
+		list( $from, $from_slug, $to, $to_slug) = $relation_parts;
+		// How do we handle field order for reflexive references?
+		// How do we handle other unique choices like show_in_rest?
+
+		$is_from_field = $from === $field['reference'];
+
+		$to_field                   = $field;
+		$to_field['name']           = $field['reflexive_name'];
+		$to_field['reflexive_name'] = $field['name'];
+		$to_field['slug']           = $field['reflexive_slug'];
+		$to_field['reflexive_slug'] = $field['slug'];
+
+		if ( $is_from_field ) {
+			$field['reference']    = $to;
+			$to_field['reference'] = $from;
+		}
+
+		$updated_models[ $to ]['fields'][ $field['id'] ]   = ! $is_from_field ? $field : $to_field;
+		$updated_models[ $from ]['fields'][ $field['id'] ] = ! $is_from_field ? $to_field : $field;
 	}
 
 	return $updated_models;

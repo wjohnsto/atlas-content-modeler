@@ -167,6 +167,113 @@ const RelationshipFields = ({ register, data, editing, watch, errors }) => {
 					</fieldset>
 				</div>
 			</div>
+			<div className="d-flex flex-column d-sm-flex flex-sm-row">
+				<div className="d-flex flex-column d-sm-flex flex-sm-row">
+					<div
+						className={`${errors.reflexiveName ? "field has-error" : "field"
+							} me-sm-5`}
+					>
+						<label htmlFor="reflexive_name">Reflexive Name</label>
+						<br />
+						<p className="help">
+							Display name for your Relationship field
+							when referenced from {models[selectedReference]?.plural}.
+						</p>
+						<input
+							aria-invalid={errors.name ? "true" : "false"}
+							id="reflexive_name"
+							name="reflexive_name"
+							placeholder="Reflexive Name"
+							type="text"
+							ref={register({ required: true, maxLength: 50 })}
+							onChange={(e) => {
+								// setInputGeneratorSourceValue(e.target.value);
+								// setNameCount(e.target.value.length);
+								// clearErrors("slug");
+							}}
+						/>
+						<p className="field-messages">
+							{errors.reflexiveName && errors.reflexiveName.type === "required" && (
+								<span className="error">
+									<Icon type="error" />
+									<span role="alert">
+										{__(
+											"This field is required",
+											"atlas-content-modeler"
+										)}
+									</span>
+								</span>
+							)}
+							{errors.reflexiveName && errors.reflexiveName.type === "maxLength" && (
+								<span className="error">
+									<Icon type="error" />
+									<span role="alert">
+										{__(
+											"Exceeds max length.",
+											"atlas-content-modeler"
+										)}
+									</span>
+								</span>
+							)}
+							<span>&nbsp;</span>
+							{/* <span className="count">{nameCount}/50</span> */}
+						</p>
+					</div>
+
+					<div className={errors.slug ? "field has-error" : "field"}>
+						<label htmlFor="slug">Reflexive API Identifier</label>
+						<br />
+						<p className="help">
+							{__(
+								"Auto-generated and used for API requests.",
+								"atlas-content-modeler"
+							)}
+						</p>
+						<input
+							id="reflexive_slug"
+							name="reflexive_slug"
+							type="text"
+							ref={register({ required: true, maxLength: 50 })}
+							// onChange={}
+						/>
+						<p className="field-messages">
+							{errors.reflexiveSlug && errors.reflexiveSlug.type === "required" && (
+								<span className="error">
+									<Icon type="error" />
+									<span role="alert">
+										{__(
+											"This field is required",
+											"atlas-content-modeler"
+										)}
+									</span>
+								</span>
+							)}
+							{errors.reflexiveSlug && errors.reflexiveSlug.type === "maxLength" && (
+								<span className="error">
+									<Icon type="error" />
+									<span role="alert">
+										{__(
+											"Exceeds max length of 50.",
+											"atlas-content-modeler"
+										)}
+									</span>
+								</span>
+							)}
+							{errors.reflexiveSlug && errors.reflexiveSlug.type === "idExists" && (
+								<span className="error">
+									<Icon type="error" />
+									<span role="alert">
+										{__(
+											"Another field in the referenced model has the same API identifier.",
+											"atlas-content-modeler"
+										)}
+									</span>
+								</span>
+							)}
+						</p>
+					</div>
+				</div>
+			</div>
 			<div className="field">
 				<label htmlFor="description">
 					{__("Description", "atlas-content-modeler")}{" "}

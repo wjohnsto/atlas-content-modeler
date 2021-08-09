@@ -13,6 +13,8 @@ use WP_Error;
 use WP_REST_Request;
 use function WPE\AtlasContentModeler\ContentRegistration\get_registered_content_types;
 use function WPE\AtlasContentModeler\ContentRegistration\update_registered_content_types;
+use function WPE\AtlasContentModeler\ContentRegistration\generate_relationship_id;
+
 
 add_action( 'rest_api_init', __NAMESPACE__ . '\register_rest_routes' );
 
@@ -218,6 +220,45 @@ function dispatch_update_content_model_field( WP_REST_Request $request ) {
 				array( 'status' => 400 )
 			);
 		}
+
+		$relationships = get_option( 'atlas_content_modeler_relationships', array() );
+		$new_rel_id    = generate_relationship_id(
+			$params['model'],
+			$params['slug'],
+			$params['reference'],
+			$params['reflexive_slug']
+		);
+
+		$relation_parts = explode( ':', $new_rel_id );
+		list( $model, $slug ) = $relation_parts;
+
+		$args = [
+			"show_in_rest"    => $params["show_in_rest"] ?? 1,
+			"show_in_graphql" => $params["show_in_graphql"] ?? 1,
+			"type"            => 'relationship',
+			"id"              => $params["id"] ?? '',
+			"position"        => $params["position"] ?? 1000,
+			"name"            => $slug === $params['slug'] ? $params["name"] : $params['reflexive_name'],
+			'reflexive_name'  => $slug === $params['slug'] ? $params["reflexive_name"] : $params['name'],
+			"slug"            => $slug === $params['slug'] ? $params["slug"] : $params['reflexive_slug'],
+			"reflexive_slug"  => $slug === $params['slug'] ? $params["reflexive_slug"] : $params['slug'],
+			"required"        => $params["required"] ?? false,
+			"minChars"        => $params["minChars"] ?? "",
+			"maxChars"        => $params["maxChars"] ?? "",
+			"reference"       => $slug === $params['slug'] ? $params["reference"] : $model,
+			"cardinality"     => $params["cardinality"] ?? "one-to-one",
+			"description"     => $params["description"] ?? "",
+		];
+
+		$relationships[ $new_rel_id ] = $args;
+
+		$updated = update_option( 'atlas_content_modeler_relationships', $relationships );
+
+		return rest_ensure_response(
+			[
+				'success' => $updated,
+			]
+		);
 	}
 
 	if ( isset( $params['type'] ) && $params['type'] === 'multipleChoice' && ! $params['choices'] ) {
