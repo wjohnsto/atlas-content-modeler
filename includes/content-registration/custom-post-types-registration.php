@@ -404,12 +404,13 @@ function register_content_fields_with_graphql( TypeRegistry $type_registry ) {
 				$rich_text = true;
 			}
 
-			$gql_field_type = map_html_field_type_to_graphql_field_type( $field['type'] );
+			$gql_field_type = map_html_field_type_to_graphql_field_type( $field );
 			if ( empty( $gql_field_type ) ) {
 				continue;
 			}
 
-			$field['type'] = $gql_field_type;
+			$field['originalType'] = $field['type'];
+			$field['type']         = $gql_field_type;
 
 			$field['resolve'] = static function( Post $post, $args, $context, $info ) use ( $field, $rich_text ) {
 				$value = get_post_meta( $post->databaseId, $field['slug'], true );
@@ -424,6 +425,14 @@ function register_content_fields_with_graphql( TypeRegistry $type_registry ) {
 				 */
 				if ( $field['type'] === 'Float' ) {
 					return (float) $value;
+				}
+
+				if ( $field['originalType'] === 'multipleChoice' && $field['listType'] === 'multiple' ) {
+					if ( ! is_array( $value ) ) {
+						return [];
+					}
+
+					return (array) array_keys( (array) $value[0] );
 				}
 
 				if ( $field['type'] === 'MediaItem' ) {
@@ -478,23 +487,31 @@ function graphql_data_is_private( bool $is_private, string $model_name, $post, $
 /**
  * Maps an HTML field type to a WPGraphQL field type.
  *
- * @param string $field_type The HTML field type.
+ * @param array $field The HTML field.
  * @access private
  *
- * @return string|null
+ * @return string|array|null
  */
-function map_html_field_type_to_graphql_field_type( string $field_type ): ?string {
-	if ( empty( $field_type ) ) {
+function map_html_field_type_to_graphql_field_type( array $field ) {
+	if ( ! isset( $field['type'] ) ) {
 		return null;
 	}
 
-	switch ( $field_type ) {
+	if ( $field['type'] === 'multipleChoice' ) {
+		if ( $field['listType'] === 'single' ) {
+			return 'String';
+		}
+		if ( $field['listType'] === 'multiple' ) {
+			return [ 'list_of' => 'String' ];
+		}
+	}
+
+	switch ( $field['type'] ) {
 		case 'text':
 		case 'textarea':
 		case 'string':
 		case 'date':
 		case 'richtext':
-			return 'String';
 		case 'number':
 			return 'Float';
 		case 'boolean':
