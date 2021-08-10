@@ -400,8 +400,8 @@ function get_registered_content_types(): array {
 			$to_field['reference'] = $from;
 		}
 
-		$updated_models[ $to ]['fields'][ $field['id'] ]   = ! $is_from_field ? $field : $to_field;
-		$updated_models[ $from ]['fields'][ $field['id'] ] = ! $is_from_field ? $to_field : $field;
+		$updated_models[ $to ]['fields'][ $field['id'] ]   = ! $is_from_field ? $to_field : $field;
+		$updated_models[ $from ]['fields'][ $field['id'] ] = ! $is_from_field ? $field : $to_field;
 	}
 
 	return $updated_models;

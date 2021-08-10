@@ -222,14 +222,14 @@ function dispatch_update_content_model_field( WP_REST_Request $request ) {
 		}
 
 		$relationships = get_option( 'atlas_content_modeler_relationships', array() );
-		$new_rel_id    = generate_relationship_id(
+		$relationship_id    = generate_relationship_id(
 			$params['model'],
 			$params['slug'],
 			$params['reference'],
 			$params['reflexive_slug']
 		);
 
-		$relation_parts = explode( ':', $new_rel_id );
+		$relation_parts = explode( ':', $relationship_id );
 		list( $model, $slug ) = $relation_parts;
 
 		$args = [
@@ -250,7 +250,7 @@ function dispatch_update_content_model_field( WP_REST_Request $request ) {
 			"description"     => $params["description"] ?? "",
 		];
 
-		$relationships[ $new_rel_id ] = $args;
+		$relationships[ $relationship_id ] = $args;
 
 		$updated = update_option( 'atlas_content_modeler_relationships', $relationships );
 
