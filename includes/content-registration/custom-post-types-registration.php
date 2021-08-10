@@ -420,6 +420,13 @@ function get_registered_content_types(): array {
  * @return bool
  */
 function update_registered_content_types( array $args ): bool {
+	foreach ( $args as $type => $model ) {
+		foreach ( $type['fields'] as $id => $field ) {
+			if ( $field['type'] === 'relationship' ) {
+				unset( $args[ $type ]['fields'][ $id ] );
+			}
+		}
+	}
 	return update_option( 'atlas_content_modeler_post_types', $args );
 }
 
