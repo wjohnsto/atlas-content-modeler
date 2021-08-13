@@ -66,6 +66,9 @@
     },
     "@wordpress/api-fetch": {
       "global": "wp.apiFetch"
+    },
+    "@wordpress/i18n": {
+      "global": "wp.i18n"
     }
   }
 }
